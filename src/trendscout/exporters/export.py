@@ -1,7 +1,7 @@
 import csv
 import json
 import re
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from ..models import AnalyzedPost, VideoIdea
@@ -18,8 +18,18 @@ def markdown_text(value: str) -> str:
 
 
 def export_results(posts: list[AnalyzedPost], ideas: list[VideoIdea], root: Path) -> Path:
-    folder = root / datetime.now(timezone.utc).strftime("%Y-%m-%d_%H%M%S_%fZ")
-    folder.mkdir(parents=True, exist_ok=False)
+    stamp = datetime.now(timezone.utc)
+    for _ in range(1000):
+        folder = root / stamp.strftime("%Y-%m-%d_%H%M%S_%fZ")
+        try:
+            folder.mkdir(parents=True, exist_ok=False)
+        except FileExistsError:
+            # Clock resolution can repeat a timestamp; never overwrite an existing run.
+            stamp = max(datetime.now(timezone.utc), stamp + timedelta(microseconds=1))
+        else:
+            break
+    else:
+        raise FileExistsError("Could not allocate a unique export directory after 1000 attempts.")
     fields = ["rank", "id", "platform", "title", "body", "author", "community", "url", "created_at", "score", "comment_count", "engagement_score", "recency_score", "discussion_score", "opportunity_score"]
     with (folder / "ranked_posts.csv").open("w", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=fields)

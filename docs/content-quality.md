@@ -18,6 +18,8 @@ Scripts have explicit `Problem:`, `Explanation:`, `Demonstration:`, and `Takeawa
 
 `generation.quality.evaluate_quality(ideas)` returns deterministic `QualityWarning` objects with a code, one-based idea numbers, and an actionable message. The CLI runs it on the generated batch and prints warnings. Exports and data models are unchanged; warnings are advisory and are not persisted in the three export files. Python callers can run the evaluator directly.
 
+V1.2's dashboard recomputes these warnings from a complete, valid `content_ideas.json` batch. It labels them as current evaluation rather than recorded run history, and distinguishes zero warnings from unavailable, incomplete or failed evaluation. See [dashboard quality states](dashboard.md#provenance-and-quality).
+
 | Check | Rule | Suggested response |
 | --- | --- | --- |
 | Duplicate hooks | Equal after case/punctuation normalization | Choose a different opening question. |

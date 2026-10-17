@@ -14,10 +14,20 @@ Only immediate subdirectories whose names parse as `YYYY-MM-DD_HHMMSS_microsecon
 
 Exported idea `mode=demo` with consistent demo source labels identifies synthetic demo output. A `live` label is displayed as **Live-labeled export — collection verification unknown**. Mixed, missing or unrecognized mode labels are unknown. Neither filenames nor URLs establish verified collection. Existing exports contain no trusted verification manifest; this dashboard never claims verified live collection. Demo source links are placeholders.
 
-The checked-out dashboard branch starts from V1, without `generation/quality.py`. V1.1's technical reference and content-quality documentation were inspected on `origin/feature/v1.1-content-quality` without switching branches or merging. No V1.1 generator, CLI or evaluator was replaced. The UI reports quality unavailable on this checkout. If the existing V1.1 evaluator is later integrated separately, the loader calls its `evaluate_quality` on the complete validated idea batch and displays its warning objects and affected idea numbers. Evaluation is disabled for a missing or partly invalid idea export to preserve batch numbering and comparisons. Recomputed results are labeled as current evaluation, not historical persisted warnings. Fact-check labels are displayed directly from exports and are not counted as editorial warnings.
+V1.2 includes the V1.1 `generation.quality.evaluate_quality` evaluator. The loader evaluates the complete validated idea batch, independently of CSV availability. It returns the same `QualityWarning` objects as a direct Python call, with codes, messages and one-based idea numbers. The overview counts warning objects once; a warning affecting two ideas appears in both expanders.
+
+| Quality state | Dashboard behavior |
+| --- | --- |
+| Completed, zero warnings | Displays **0** and a recomputation caption. A valid empty idea list also evaluates to zero warnings. |
+| Completed, warnings found | Displays the actual warning count and warnings under each affected idea. |
+| Evaluator unavailable | Displays **Unavailable**, with an explicit status if the evaluator module is missing from the installation. |
+| Missing or invalid idea export | Displays **Unavailable** and file/record errors; batch evaluation is impossible. Valid remaining ideas retain their original exported positions. |
+| Evaluator raised an error | Displays **Unavailable**, the failure status and the error; exports remain inspectable. No zero-warning fallback is used. |
+
+Warnings are recomputed using the installed evaluator and labeled **not historical results**. V1.1's CLI evaluates after export; neither the Python pipeline result nor the three export files record warning history. Fact-check labels are displayed directly from exports and are not counted as editorial warnings. The evaluator's advisory rules and limits are documented in [content quality](content-quality.md). No missing fields, invalid records or evaluator failures are silently treated as a clean evaluation.
 
 The dashboard provides no quality score, factual verification, publishing, historical analytics or virality forecast. Scores are relative research heuristics for one candidate set. Source text is displayed as data, without HTML execution. Keep the server local; it has no authentication and can browse output directories readable by its process.
 
 ## Verification
 
-Run `python -m pytest -q` for all tests. Parsing, malformed records, empty files, missing files, run discovery, provenance and evaluator integration tests require only the existing development dependencies. UI interaction tests use Streamlit's AppTest and skip when the optional extra is absent. With `.[dev,dashboard]` installed, these tests exercise demo metrics, filtering and the empty state.
+Run `python -m pytest -q` for all tests. Parsing, malformed records, empty files, missing files, run discovery, provenance and evaluator integration tests require only the existing development dependencies. UI interaction tests use Streamlit's AppTest and skip when the optional extra is absent. With `.[dev,dashboard]` installed, these tests exercise demo metrics, filtering, candidate inspection, source links, actual warnings, original idea numbers and empty/partial runs.

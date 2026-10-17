@@ -30,7 +30,7 @@ st.info(run.provenance)
 for issue in run.issues:
     st.warning(issue)
 if run.issues:
-    st.caption("Counts and charts below include validated records only; excluded records are listed above.")
+    st.caption("Counts and charts include only validated records. Data and evaluation issues are listed above.")
 st.caption("Exported source platforms: " + (", ".join(sorted({p.post.platform for p in run.posts} | {i.source_platform for i in run.ideas})) or "Unknown"))
 overview, trends, ideas = st.tabs(["Overview", "Ranked trends", "Content ideas"])
 rows = [{**item.post.model_dump(mode="json"), **item.model_dump(exclude={"post"})} for item in run.posts]
@@ -77,7 +77,7 @@ with ideas:
     st.caption(run.quality_status)
     if not run.ideas:
         st.info("No valid ideas. Check the selected run's JSON and warnings above.")
-    for number, idea in enumerate(run.ideas, 1):
+    for number, idea in zip(run.idea_numbers, run.ideas):
         with st.expander(f"{number}. {idea.title}"):
             st.caption(f"Opportunity {idea.opportunity_score:.2f}/100 · {idea.mode} · {idea.generation_method}")
             for label, value in [("Niche", idea.target_niche), ("Angle", idea.content_angle), ("Hook", idea.hook), ("Script", idea.script)]:

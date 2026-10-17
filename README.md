@@ -1,17 +1,19 @@
-﻿# TrendScout V1
+# TrendScout V1.2
 
 TrendScout turns content research leads into ranked, traceable short-form video concepts. It addresses a creator's recurring problem: sorting through discussions and deciding what is worth investigating before spending time on production.
 
-V1 implements **Discover → Analyze → Rank → Generate → Export** as a Python CLI. It requires no paid AI API. Templates produce research-oriented drafts and practical visual suggestions; a creator must verify claims and complete the proposed demonstrations before publishing.
+TrendScout implements **Discover → Analyze → Rank → Generate → Export** as a Python CLI, with a local Streamlit dashboard for exploring saved runs. It requires no paid AI API. Topic-aware templates produce research drafts and visual plans; advisory editorial checks flag common issues. Creators must verify claims and complete proposed demonstrations before publishing.
 
 ## Features and stack
 
 - Explicit offline demo with 25 synthetic AI-workflow records.
 - Reddit OAuth source adapter for approved application-only access, with validation, deduplication, timeouts, bounded retries and clear access errors.
 - Transparent opportunity scoring, stable rankings and source attribution.
-- Template concepts with hooks, angles, approximately 30–60 seconds of spoken text, visual suggestions and calls to action.
+- Topic-aware template concepts with hooks, angles, structured scripts, visual plans and calls to action.
+- Deterministic editorial checks for repetition, missing sections, script length, filler and verification labels.
 - Timestamped CSV, JSON and Markdown exports in UTF-8.
-- Offline tests for sources, scoring, generation, exports, pipeline and CLI.
+- Optional read-only dashboard with run selection, score charts, candidate filters and expandable ideas.
+- Offline tests for sources, scoring, generation, quality, exports, pipeline, CLI and dashboard.
 
 Python 3.12+, requests, Pydantic, Typer, Rich and python-dotenv form the core application stack. Pytest is the development dependency. The optional V1.2 dashboard adds a local Streamlit server; no database is used.
 
@@ -24,9 +26,11 @@ src/trendscout/
   pipeline.py               orchestration
   sources/                  ContentSource protocol, Reddit, explicit demo
   analysis/                 normalization, recency and ranking
-  generation/               IdeaGenerator protocol and template provider
+  generation/               IdeaGenerator protocol, topic plans and quality evaluator
   exporters/                CSV, JSON and Markdown writers
+  dashboard/                run discovery and export validation (no Streamlit import)
   data/sample_posts.json    installed package demo fixture
+dashboard/app.py            optional Streamlit presentation
 tests/                      offline fixtures, mocks and integration tests
 examples/sample_posts.json human-readable copy of the synthetic fixture
 ```
@@ -83,7 +87,15 @@ output/<YYYY-MM-DD_HHMMSS_microsecondsZ>/
 
 CSV includes source fields, rank and all component scores. Cells that could be interpreted as spreadsheet formulas are prefixed with an apostrophe; JSON preserves the original validated text. JSON is a list of concepts with source identity, title, URL, niche, angle, hook, script, visuals, CTA, score, mode, generation method and fact-check labels. Markdown escapes source text and presents the same concepts in a readable format.
 
-An illustrative concept might be titled “Test the claim: How should I evaluate an AI writing assistant?” and open with “Would this actually help your workflow?” Its script proposes a controlled workflow comparison rather than claiming that an untested tool is effective. Scores in actual output depend on the candidate set and runtime.
+For example, a transcription concept can open with “Would your transcript preserve a name, a pause, and a correction?” Its script proposes a comparison with a manual reference transcript; it does not claim that a tool has been tested. Scores depend on the candidate set and runtime.
+
+## Content quality
+
+The V1.1 generator uses source title/body keywords to choose a local topic plan, then rotates six editorial approaches. Scripts contain `Problem:`, `Explanation:`, `Demonstration:` and `Takeaway:` sections, targeting 80–160 words. Metadata retains the full source title while narration uses a bounded quote.
+
+After generation and export, the CLI runs `generation.quality.evaluate_quality` and prints actionable warnings. The Python pipeline returns ideas for callers to evaluate; it does not persist warning results. The dashboard runs the same evaluator on complete idea exports. **Zero warnings** means evaluation completed without a matching rule; **Unavailable** means it could not be evaluated. Dashboard warnings are labeled as recomputed, not historical run results. A failed evaluation is reported explicitly.
+
+Checks are advisory heuristics, not factual verification or objective creativity scores. See [content-quality rules and limitations](docs/content-quality.md).
 
 ## Ranking methodology
 
@@ -114,7 +126,7 @@ If no runs exist, first execute `python -m trendscout run --niche "AI tools" --l
 
 The Overview shows validated candidate/idea counts, average opportunity on the existing 0–100 scale, a score distribution and comparisons of the top 20 ranked candidates. Ranked trends supports source, text and minimum-score filters, sortable columns, source links and individual inspection. Content ideas expands hooks, scripts, visual plans, CTAs, attribution and exported fact-check metadata. It performs no collection, generation, or export writes.
 
-See [dashboard details and limitations](docs/dashboard.md) for schemas, provenance and quality availability. This branch does not contain the V1.1 evaluator: the dashboard explicitly displays **Unavailable**, rather than manufacturing warning counts. Existing pipeline logic and export formats are unchanged.
+See [dashboard details and limitations](docs/dashboard.md) for validation, provenance and quality states. Missing or invalid idea exports disable batch evaluation; valid records remain inspectable with their original idea numbers. Existing export formats are unchanged. Demo runs are labeled synthetic; live-labeled exports do not establish verified collection.
 
 ## Tests and verification
 
@@ -122,7 +134,7 @@ See [dashboard details and limitations](docs/dashboard.md) for schemas, provenan
 .\.venv\Scripts\python.exe -m pytest -q
 ```
 
-All automated tests run without network access or API credentials. They cover normalization and boundaries, time decay, deterministic tie-breaking, malformed and duplicate records, missing credentials, OAuth request construction, bounded retries, access/rate errors, invalid JSON, template traceability and script lengths, CSV/JSON/Markdown exports, CLI validation, shortfalls and the complete demo pipeline.
+All automated tests run without network access or API credentials. They cover sources, scoring, topic-aware generation, editorial checks, exports, CLI behavior and the demo pipeline, plus dashboard parsing, provenance, quality states and UI interactions. Streamlit UI tests skip when the optional dashboard dependency is absent; install `.[dev,dashboard]` to run them.
 
 ## Current limitations
 
@@ -133,12 +145,15 @@ All automated tests run without network access or API credentials. They cover no
 - Demo topics remain fixed even when the niche changes. Fixture timestamps age naturally, so runtime rankings can change.
 - Reddit uses one search page, up to 100 candidates. There is no persistent cache, historical trend detection, publishing, video rendering, or analytics.
 - Opportunity scores are research heuristics, not predictions of views, virality, or profitability.
+- Live Reddit access remains unverified with real credentials. Export labels cannot independently verify collection provenance.
+- The dashboard reads local files without authentication. Keep its server local. Partial exports are reported; quality warnings are recomputed with the current evaluator and are not persisted history.
 
 ## Roadmap
 
 | Milestone | Scope |
 | --- | --- |
 | V1 / V1.1 | Discover, rank, generate, export; topic plans and editorial checks. |
+| V1.2 | Local Streamlit exploration of exported runs, ranked candidates, ideas and recomputed editorial warnings. |
 | Next | Verify authorized live collection; evaluate script quality on a broader set of real topics. |
 | V2 | Optional configurable LLM providers and content planning. |
 | V3 | Supported YouTube and other platform research APIs. |
