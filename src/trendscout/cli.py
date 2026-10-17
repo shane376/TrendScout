@@ -6,6 +6,7 @@ from rich.console import Console
 from rich.table import Table
 
 from .config import Settings
+from .generation.quality import evaluate_quality
 from .pipeline import run_pipeline
 from .sources.base import SourceError
 
@@ -47,5 +48,11 @@ def run(
         table.add_row(str(item.rank), Text(item.post.title), f"{item.opportunity_score:.2f}")
     console.print(table)
     console.print(f"Ranked {result.candidate_count} candidates; generated {len(result.ideas)} template concepts.")
+    warnings = evaluate_quality(result.ideas)
+    if warnings:
+        console.print("Editorial quality warnings (heuristics; review manually):", style="yellow")
+        for warning in warnings:
+            numbers = ", ".join(str(number) for number in warning.idea_numbers)
+            console.print(f"Ideas {numbers} [{warning.code}]: {warning.message}", markup=False)
     console.print(f"Exports: {result.output_dir.resolve()}", markup=False)
     console.print("Research heuristic only. Scripts require fact-checking before production.")

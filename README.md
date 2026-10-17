@@ -1,4 +1,4 @@
-# TrendScout V1
+﻿# TrendScout V1
 
 TrendScout turns content research leads into ranked, traceable short-form video concepts. It addresses a creator's recurring problem: sorting through discussions and deciding what is worth investigating before spending time on production.
 
@@ -33,41 +33,28 @@ examples/sample_posts.json human-readable copy of the synthetic fixture
 
 The modular pipeline isolates collection from scoring and generation. New source adapters can supply the same validated `ContentPost` model, while a future LLM adapter can implement `IdeaGenerator` without changing ranking or exports. The two demo fixture copies should be kept synchronized when edited.
 
-## Install on Windows PowerShell
+## Quick start — Windows PowerShell
 
-From this project directory:
+From the project directory:
 
 ```powershell
 py -3.12 -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -e ".[dev]"
-.\.venv\Scripts\python.exe -m trendscout --help
-```
-
-Activation is optional. Using the environment's Python directly avoids PowerShell execution-policy changes. To activate in a shell that permits it, run `.\.venv\Scripts\Activate.ps1`, then use `python` in place of `.\.venv\Scripts\python.exe`.
-
-## Run the offline demo
-
-```powershell
 .\.venv\Scripts\python.exe -m trendscout run --niche "AI tools" --limit 5 --demo
 ```
 
-The terminal explicitly reports demo mode, ranks 25 fixture candidates and generates five concepts. These are **synthetic examples, not collected Reddit posts or current trends**. Their `example.com` URLs are placeholders. The fixture is fixed and remains about AI workflows even if you pass another niche; `--niche` changes the intended audience of the draft, not the fixture topics. Fixed timestamps age naturally, so scores change with runtime. Tests inject a fixed clock for reproducible assertions.
-
-`--limit` accepts 1–20 final ideas. The pipeline requests `min(100, max(25, limit × 5))` candidates. If fewer unique valid candidates are available, it exports the available ideas and reports the shortfall rather than fabricating additional posts. CSV contains all ranked candidates; JSON and Markdown contain only the selected concepts.
-
-Override the output location with `--output-dir .\my-results` or `OUTPUT_DIR`.
-
-## Live Reddit configuration
-
-Live integration is implemented and mock-tested, but **live collection has not been verified**: no authorized credentials were available during implementation.
-
-Reddit requires OAuth and an identifying User-Agent. Consult the [Reddit Data API Wiki](https://support.reddithelp.com/hc/en-us/articles/16160319875092-Reddit-Data-API-Wiki), [OAuth application-only documentation](https://github.com/reddit-archive/reddit/wiki/OAuth2#application-only-oauth), and [search endpoint reference](https://www.reddit.com/dev/api/#GET_search). Obtain any necessary approval and credentials for your intended use before configuring the application. Having a client ID does not establish that your use has been approved.
+The demo ranks 25 **synthetic AI-workflow records** and exports five concepts. It does not collect real posts or measure current demand. `--limit` sets the final idea count (1–20); `--output-dir` overrides the default `output/` folder.
 
 ```powershell
-Copy-Item .env.example .env
-# Edit .env locally with your approved credentials and identifying User-Agent.
-.\.venv\Scripts\python.exe -m trendscout run --niche "Python automation" --limit 10
+.\.venv\Scripts\python.exe -m trendscout --help
+.\.venv\Scripts\python.exe -m pytest -q
 ```
+
+Using the virtual environment's executable avoids PowerShell activation-policy changes.
+
+## Live Reddit setup
+
+Obtain approved Reddit Data API access for your intended use, then copy `.env.example` to `.env` and configure it locally:
 
 ```dotenv
 CONTENT_SOURCE=reddit
@@ -77,13 +64,15 @@ REDDIT_USER_AGENT=windows:trendscout:v0.1 (by /u/YOUR_USERNAME)
 OUTPUT_DIR=output
 ```
 
-The application uses the `client_credentials` application-only OAuth grant, then requests `https://oauth.reddit.com/search` for relevant links from the past month. It does not use anonymous JSON scraping. Only one search page is requested, capped at 100 results, and adult or stickied records are excluded. Missing credentials fail with a useful message; no live error triggers a demo fallback. Keep `.env` private; it is ignored by Git. Environment variables take precedence over `.env` values.
+```powershell
+Copy-Item .env.example .env
+# Edit .env before running the command below. Never commit credentials.
+.\.venv\Scripts\python.exe -m trendscout run --niche "Python automation" --limit 10
+```
 
-Connect/read timeouts are 5/20 seconds. Connection failures, timeouts and transient 500/502/503/504 responses retry up to three total attempts with 1- and 2-second backoff. Authentication errors stop immediately. HTTP 429 stops collection so the caller can wait for the rate limit to reset; it never attempts to evade that limit. Response bodies, tokens and credentials are not included in error messages.
+Live Reddit collection is implemented and mock-tested but remains **unverified with real credentials**. Missing credentials or access errors fail explicitly; the app never substitutes demo data for a live result. See [API setup and technical reference](docs/technical-reference.md) for authorization references, request behavior, scoring, and export details.
 
 ## Example output
-
-Each run creates a unique directory using the actual UTC runtime, including microseconds:
 
 ```text
 output/<YYYY-MM-DD_HHMMSS_microsecondsZ>/
@@ -135,26 +124,24 @@ See [dashboard details and limitations](docs/dashboard.md) for schemas, provenan
 
 All automated tests run without network access or API credentials. They cover normalization and boundaries, time decay, deterministic tie-breaking, malformed and duplicate records, missing credentials, OAuth request construction, bounded retries, access/rate errors, invalid JSON, template traceability and script lengths, CSV/JSON/Markdown exports, CLI validation, shortfalls and the complete demo pipeline.
 
-## Limitations
+## Current limitations
 
-- Reddit live access requires approved credentials and remains unverified in this environment.
-- Demo records are synthetic and do not measure real demand. Other niches require live collection for meaningful research.
-- Templates use five editorial approaches, cycling for larger requests. They are not LLM-generated and may need substantial editorial work.
-- Source titles are untrusted quoted data, never executed as instructions. Claims remain unverified. Review quoted text, check authoritative documentation and verify rights before production.
-- Scripts are research drafts, not completed product reviews. Speaking duration depends on pace and title length.
-- One Reddit search page, no pagination, persistent cache, cross-run deduplication or historical trend detection.
-- Outputs are local files; an interrupted or failed filesystem write may leave a partial output directory.
-- No publishing, video rendering, account management or analytics are implemented.
+- Scripts are template-generated research drafts. Verify source claims, permissions, current documentation, and any demonstration results before production.
+- Keyword matching covers a small set of topics. Unfamiliar topics receive a source-anchored research plan; ambiguous titles and bodies can be misclassified.
+- Six editorial approaches cycle across a batch. Related topics may still repeat; quality warnings help identify these cases but cannot judge factual accuracy or semantic completeness.
+- Scripts target 80–160 whitespace-delimited words. Time a read-through: speaking pace and section labels affect duration.
+- Demo topics remain fixed even when the niche changes. Fixture timestamps age naturally, so runtime rankings can change.
+- Reddit uses one search page, up to 100 candidates. There is no persistent cache, historical trend detection, publishing, video rendering, or analytics.
+- Opportunity scores are research heuristics, not predictions of views, virality, or profitability.
 
 ## Roadmap
 
-| Version | Scope |
+| Milestone | Scope |
 | --- | --- |
-| V1 — Content Discovery and Ideation | Retrieve, rank, generate and export (current; live Reddit verification pending). |
-| V2 — LLM Integration | Configurable AI providers for improved scripts and content planning. |
-| V3 — Multi-Platform Research | Supported YouTube and other platform APIs. |
-| V4 — Automated Content Production | Voiceovers, captions, visual assets and video drafts through appropriate services. |
-| V5 — Analytics Dashboard | Published content, engagement and performance tracking. |
-| V6 — Business Automation | Scheduling, review workflows, content calendars and client reporting. |
-
-The next practical milestone is an authorized live Reddit smoke test, followed by editorial evaluation of generated concepts before adding an optional LLM provider.
+| V1 / V1.1 | Discover, rank, generate, export; topic plans and editorial checks. |
+| Next | Verify authorized live collection; evaluate script quality on a broader set of real topics. |
+| V2 | Optional configurable LLM providers and content planning. |
+| V3 | Supported YouTube and other platform research APIs. |
+| V4 | Voiceovers, captions, visual assets, and video drafts. |
+| V5 | Published-content analytics and performance tracking. |
+| V6 | Scheduling, review workflows, calendars, and client reporting. |
