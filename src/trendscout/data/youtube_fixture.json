@@ -1,0 +1,34 @@
+{
+  "synthetic": true,
+  "videos": [
+    {
+      "id": "synthetic-video-1",
+      "snippet": {
+        "title": "Synthetic example: review an automation workflow",
+        "description": "Offline fixture only. This is not a collected YouTube video or market observation.",
+        "channelTitle": "Synthetic example channel",
+        "publishedAt": "2026-01-01T12:00:00Z"
+      },
+      "statistics": {"viewCount": "120", "likeCount": "8", "commentCount": "0"}
+    },
+    {
+      "id": "synthetic-video-2",
+      "snippet": {
+        "title": "Synthetic example: missing public engagement",
+        "description": "This fixture intentionally omits statistics.",
+        "channelTitle": "Synthetic example channel",
+        "publishedAt": "2026-01-02T12:00:00Z"
+      }
+    },
+    {
+      "id": "synthetic-video-3",
+      "snippet": {
+        "title": "Synthetic example: compare evidence sources",
+        "description": "View count is available in this fixture; likes and comments are unavailable.",
+        "channelTitle": "Synthetic example channel",
+        "publishedAt": "2026-01-03T12:00:00+00:00"
+      },
+      "statistics": {"viewCount": "45"}
+    }
+  ]
+}
