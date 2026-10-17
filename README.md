@@ -129,6 +129,16 @@ The Overview shows validated candidate/idea counts, average opportunity on the e
 
 See [dashboard details and limitations](docs/dashboard.md) for validation, provenance and quality states. Missing or invalid idea exports disable batch evaluation; valid records remain inspectable with their original idea numbers. Existing export formats are unchanged. Demo runs are labeled synthetic; live-labeled exports do not establish verified collection.
 
+## V1.3.2 YouTube ingestion
+
+The separate [YouTube Data API v3 adapter](docs/v1.3-youtube-ingestion.md) searches for videos and normalizes metadata and native counters through the ingestion foundation. It provides bounded pagination/retries and explicit collection errors. Missing statistics remain unavailable. No new ranking, generation or dashboard behavior is added, and the command writes no source data to disk.
+
+```powershell
+.\.venv\Scripts\python.exe -m trendscout.ingestion.youtube_demo --query "AI automation" --limit 10 --fixture
+```
+
+Fixture mode is explicitly synthetic and needs no key or network. For an intentionally authorized live collection, configure `YOUTUBE_API_KEY` locally and omit `--fixture`. Live access remains **unverified**. See the adapter guide for environment bounds, officially verified quota references and retention restrictions. Live persistence remains disabled by default; configuration is not permission to store API data or derive analytics.
+
 ## Tests and verification
 
 V1.3.1's [ingestion foundation](docs/v1.3-ingestion-foundation.md) provides source-neutral models, an adapter protocol, transactional SQLite persistence and per-source expiration. It does not add live providers, new scoring or dashboard features. To run its disposable offline workflow:
@@ -164,9 +174,10 @@ All automated tests run without network access or API credentials. They cover so
 | V1 / V1.1 | Discover, rank, generate, export; topic plans and editorial checks. |
 | V1.2 | Local Streamlit exploration of exported runs, ranked candidates, ideas and recomputed editorial warnings. |
 | V1.3.1 | Source-neutral ingestion contracts, synthetic adapter, opt-in SQLite storage and retention; no new live integration. |
+| V1.3.2 | Official YouTube metadata/counter adapter and read-only collection command; offline verified, live verification pending. |
 | Next | Verify authorized live collection; evaluate script quality on a broader set of real topics. |
 | V2 | Optional configurable LLM providers and content planning. |
-| V3 | Supported YouTube and other platform research APIs. |
+| V3 | Broader supported platform research APIs and integration with research workflows. |
 | V4 | Voiceovers, captions, visual assets, and video drafts. |
 | V5 | Published-content analytics and performance tracking. |
 | V6 | Scheduling, review workflows, calendars, and client reporting. |
