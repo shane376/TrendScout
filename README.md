@@ -13,7 +13,7 @@ V1 implements **Discover → Analyze → Rank → Generate → Export** as a Pyt
 - Timestamped CSV, JSON and Markdown exports in UTF-8.
 - Offline tests for sources, scoring, generation, exports, pipeline and CLI.
 
-Python 3.12+, requests, Pydantic, Typer, Rich and python-dotenv form the application stack. Pytest is the development dependency. There is no database or web server.
+Python 3.12+, requests, Pydantic, Typer, Rich and python-dotenv form the core application stack. Pytest is the development dependency. The optional V1.2 dashboard adds a local Streamlit server; no database is used.
 
 ## Architecture
 
@@ -109,6 +109,23 @@ For each candidate set:
 All components and final scores are bounded to 0–100. Missing numeric metrics default to zero. Invalid records are skipped with a warning; missing required fields, malformed timestamps, invalid URLs and negative comment counts are rejected. Duplicate source IDs are removed within the same platform. An empty candidate set produces an error and no exports.
 
 The score is a **research heuristic**, not a prediction of views, virality or profitability. Scores from different candidate sets are not directly comparable. Niche relevance is supplied by Reddit search; there is no semantic relevance model in V1.
+
+## V1.2 local intelligence dashboard
+
+Install the optional UI dependency from the repository root (the CLI does not require it):
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install -e ".[dev,dashboard]"
+.\.venv\Scripts\python.exe -m streamlit run dashboard/app.py --server.address localhost
+```
+
+With the virtual environment activated, the launch command is `python -m streamlit run dashboard/app.py --server.address localhost`. Open `http://localhost:8501` and stop the server with Ctrl+C. Streamlit's standard launch command `python -m streamlit run dashboard/app.py` also works.
+
+If no runs exist, first execute `python -m trendscout run --niche "AI tools" --limit 5 --demo`. The dashboard has the same empty-state instructions. It reads `OUTPUT_DIR` (including `.env`) by default; enter another directory in the sidebar for custom CLI output locations. Select a timestamped run, newest first in UTC, and click **Refresh exports** after adding files. The dashboard reads files on each interaction without a stale data cache.
+
+The Overview shows validated candidate/idea counts, average opportunity on the existing 0–100 scale, a score distribution and comparisons of the top 20 ranked candidates. Ranked trends supports source, text and minimum-score filters, sortable columns, source links and individual inspection. Content ideas expands hooks, scripts, visual plans, CTAs, attribution and exported fact-check metadata. It performs no collection, generation, or export writes.
+
+See [dashboard details and limitations](docs/dashboard.md) for schemas, provenance and quality availability. This branch does not contain the V1.1 evaluator: the dashboard explicitly displays **Unavailable**, rather than manufacturing warning counts. Existing pipeline logic and export formats are unchanged.
 
 ## Tests and verification
 
