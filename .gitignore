@@ -8,3 +8,11 @@ build/
 dist/
 
 /Microsoft/
+
+# Local ingestion databases and SQLite sidecars
+*.sqlite
+*.sqlite3
+*.db
+*.sqlite-*
+*.sqlite3-*
+*.db-*

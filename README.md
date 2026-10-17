@@ -15,7 +15,7 @@ TrendScout implements **Discover → Analyze → Rank → Generate → Export** 
 - Optional read-only dashboard with run selection, score charts, candidate filters and expandable ideas.
 - Offline tests for sources, scoring, generation, quality, exports, pipeline, CLI and dashboard.
 
-Python 3.12+, requests, Pydantic, Typer, Rich and python-dotenv form the core application stack. Pytest is the development dependency. The optional V1.2 dashboard adds a local Streamlit server; no database is used.
+Python 3.12+, requests, Pydantic, Typer, Rich and python-dotenv form the core application stack. Pytest is the development dependency. The optional V1.2 dashboard adds a local Streamlit server. V1.3.1 adds a separate opt-in SQLite ingestion foundation using Python's standard library; the existing CLI and dashboard still read and write file exports.
 
 ## Architecture
 
@@ -29,6 +29,7 @@ src/trendscout/
   generation/               IdeaGenerator protocol, topic plans and quality evaluator
   exporters/                CSV, JSON and Markdown writers
   dashboard/                run discovery and export validation (no Streamlit import)
+  ingestion/                V1.3 contracts, synthetic adapter and opt-in SQLite repository
   data/sample_posts.json    installed package demo fixture
 dashboard/app.py            optional Streamlit presentation
 tests/                      offline fixtures, mocks and integration tests
@@ -130,6 +131,14 @@ See [dashboard details and limitations](docs/dashboard.md) for validation, prove
 
 ## Tests and verification
 
+V1.3.1's [ingestion foundation](docs/v1.3-ingestion-foundation.md) provides source-neutral models, an adapter protocol, transactional SQLite persistence and per-source expiration. It does not add live providers, new scoring or dashboard features. To run its disposable offline workflow:
+
+```powershell
+.\.venv\Scripts\python.exe -m trendscout.ingestion.demo
+```
+
+No API keys, network access or new dependencies are required. Persistent live-data storage remains disabled unless explicitly configured for a source after its policy requirements are resolved.
+
 ```powershell
 .\.venv\Scripts\python.exe -m pytest -q
 ```
@@ -154,6 +163,7 @@ All automated tests run without network access or API credentials. They cover so
 | --- | --- |
 | V1 / V1.1 | Discover, rank, generate, export; topic plans and editorial checks. |
 | V1.2 | Local Streamlit exploration of exported runs, ranked candidates, ideas and recomputed editorial warnings. |
+| V1.3.1 | Source-neutral ingestion contracts, synthetic adapter, opt-in SQLite storage and retention; no new live integration. |
 | Next | Verify authorized live collection; evaluate script quality on a broader set of real topics. |
 | V2 | Optional configurable LLM providers and content planning. |
 | V3 | Supported YouTube and other platform research APIs. |
