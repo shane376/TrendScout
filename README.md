@@ -137,7 +137,17 @@ The separate [YouTube Data API v3 adapter](docs/v1.3-youtube-ingestion.md) searc
 .\.venv\Scripts\python.exe -m trendscout.ingestion.youtube_demo --query "AI automation" --limit 10 --fixture
 ```
 
-Fixture mode is explicitly synthetic and needs no key or network. For an intentionally authorized live collection, configure `YOUTUBE_API_KEY` locally and omit `--fixture`. Live access remains **unverified**. See the adapter guide for environment bounds, officially verified quota references and retention restrictions. Live persistence remains disabled by default; configuration is not permission to store API data or derive analytics.
+Fixture mode is explicitly synthetic and needs no key or network. For an intentionally authorized live collection, configure `YOUTUBE_API_KEY` locally and omit `--fixture`. The V1.3.2 live smoke test succeeded on **October 17, 2026**, as reported by the maintainer. Production readiness and live-data retention remain unverified. See the adapter guide for environment bounds, officially verified quota references and retention restrictions. Live persistence remains disabled by default; configuration is not permission to store API data or derive analytics.
+
+## V1.3.3 YouTube research intelligence
+
+The [read-only intelligence report](docs/v1.3-youtube-intelligence.md) adds deterministic research priorities, lifetime-average views/day, engagement ratios, component availability, source evidence and separate creator/business hypotheses. Missing metrics stay unavailable. Scores are exploratory heuristics; business hypotheses are not validated market demand. The existing ingestion contracts, CLI, dashboard, SQLite repository and legacy scoring remain unchanged.
+
+```powershell
+.\.venv\Scripts\python.exe -m trendscout.ingestion.youtube_intelligence --query "AI automation" --limit 10 --fixture
+```
+
+Live analysis requires `--authorized-live-analysis` after applicable analytics permissions have been established, in addition to `YOUTUBE_API_KEY`. API access alone does not establish that permission. The command writes no metadata or derived reports to disk and never substitutes fixtures after a live failure. See the guide for formulas, configuration, caveats and authorization requirements.
 
 ## Tests and verification
 
@@ -174,8 +184,9 @@ All automated tests run without network access or API credentials. They cover so
 | V1 / V1.1 | Discover, rank, generate, export; topic plans and editorial checks. |
 | V1.2 | Local Streamlit exploration of exported runs, ranked candidates, ideas and recomputed editorial warnings. |
 | V1.3.1 | Source-neutral ingestion contracts, synthetic adapter, opt-in SQLite storage and retention; no new live integration. |
-| V1.3.2 | Official YouTube metadata/counter adapter and read-only collection command; offline verified, live verification pending. |
-| Next | Verify authorized live collection; evaluate script quality on a broader set of real topics. |
+| V1.3.2 | Official YouTube adapter; live ingestion smoke test succeeded October 17, 2026; production and retention remain unverified. |
+| V1.3.3 | Explainable read-only video research priorities and separate creator/business hypotheses; offline tested. |
+| Next | Review production analytics authorization and retention; validate research usefulness on broader topics. |
 | V2 | Optional configurable LLM providers and content planning. |
 | V3 | Broader supported platform research APIs and integration with research workflows. |
 | V4 | Voiceovers, captions, visual assets, and video drafts. |
